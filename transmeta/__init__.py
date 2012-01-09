@@ -132,18 +132,21 @@ class TransMeta(models.base.ModelBase):
             original_attr = attrs[field]
             for lang in get_languages():
                 lang_code = lang[LANGUAGE_CODE]
-                lang_attr = copy.copy(original_attr)
-                lang_attr.original_fieldname = field
                 lang_attr_name = get_real_fieldname(field, lang_code)
-                if lang_code != default_language:
-                    # only will be required for default language
-                    if not lang_attr.null and lang_attr.default is NOT_PROVIDED:
-                        lang_attr.null = True
-                    if not lang_attr.blank:
-                        lang_attr.blank = True
-                if hasattr(lang_attr, 'verbose_name'):
-                    lang_attr.verbose_name = LazyString(lang_attr.verbose_name, lang_code)
-                attrs[lang_attr_name] = lang_attr
+                if not attrs.get(lang_attr_name):
+                    # only add the attr if there is no localized field defined yet in the original class
+                    lang_attr = copy.copy(original_attr)
+                    lang_attr.original_fieldname = field
+                    if lang_code != default_language:
+                        # only will be required for default language
+                        if not lang_attr.null and lang_attr.default is NOT_PROVIDED:
+                            lang_attr.null = True
+                        if not lang_attr.blank:
+                            lang_attr.blank = True
+                    if hasattr(lang_attr, 'verbose_name'):
+                        lang_attr.verbose_name = LazyString(lang_attr.verbose_name, lang_code)
+                    attrs[lang_attr_name] = lang_attr
+
             del attrs[field]
             attrs[field] = property(default_value(field))
 
